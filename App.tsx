@@ -18,6 +18,8 @@ const EditableSlide = React.memo(React.forwardRef<HTMLDivElement, {
   onFormat: (command: string, value?: string) => void,
   onStyleUpdate: (part: 'body', style: Partial<TextStyles>) => void,
   onDeactivate: () => void,
+  onMove?: (idx: number, direction: 'up' | 'down') => void,
+  totalSlides?: number,
   toolbarRef?: React.RefObject<HTMLDivElement>,
   isFormattingRef?: React.MutableRefObject<boolean>,
   savedSelectionRef?: React.MutableRefObject<Range | null>,
@@ -33,6 +35,8 @@ const EditableSlide = React.memo(React.forwardRef<HTMLDivElement, {
   onFormat,
   onStyleUpdate,
   onDeactivate,
+  onMove,
+  totalSlides,
   toolbarRef,
   isFormattingRef,
   savedSelectionRef,
@@ -192,8 +196,26 @@ const EditableSlide = React.memo(React.forwardRef<HTMLDivElement, {
           )}
 
           <div className="flex justify-between items-center no-print mb-8" data-html2canvas-ignore>
-            <span className="text-xs font-black opacity-30 uppercase tracking-widest">Digitalização {idx + 1}</span>
+            <span className="text-xs font-black opacity-30 uppercase tracking-widest">SLIDE {idx + 1}</span>
             <div className="flex gap-2">
+              <div className="flex bg-slate-100 rounded-full px-1 py-1 mr-2 no-print">
+                <button
+                  onClick={() => onMove?.(idx, 'up')}
+                  disabled={idx === 0}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${idx === 0 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-indigo-600 hover:text-white text-slate-500'}`}
+                  title="Mover para cima"
+                >
+                  <i className="fa-solid fa-arrow-up text-[10px]"></i>
+                </button>
+                <button
+                  onClick={() => onMove?.(idx, 'down')}
+                  disabled={totalSlides !== undefined && idx === totalSlides - 1}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${totalSlides !== undefined && idx === totalSlides - 1 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-indigo-600 hover:text-white text-slate-500'}`}
+                  title="Mover para baixo"
+                >
+                  <i className="fa-solid fa-arrow-down text-[10px]"></i>
+                </button>
+              </div>
               {onPreview && (
                 <button
                   onClick={() => onPreview?.('')}
@@ -261,6 +283,7 @@ const App: React.FC = () => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const slideRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const toolbarRef = useRef<HTMLDivElement>(null);
@@ -391,6 +414,48 @@ const App: React.FC = () => {
       setNewProjectMeta({ course: "", topic: "" });
     } catch (err) {
       setError("Erro ao processar imagens. Verifique se o conteúdo é legível.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const moveSlide = (idx: number, direction: 'up' | 'down') => {
+    if (!activeProject) return;
+    const newSlides = [...activeProject.slides];
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= newSlides.length) return;
+
+    [newSlides[idx], newSlides[targetIdx]] = [newSlides[targetIdx], newSlides[idx]];
+    const updated = { ...activeProject, slides: newSlides };
+    setActiveProject(updated);
+    setProjects(prev => prev.map(p => p.id === activeProject.id ? updated : p));
+  };
+
+  const processAppendScan = async (newImages: string[]) => {
+    if (!activeProject) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await extractSlidesWithLlama(newImages);
+      const startIdx = activeProject.originalImages.length;
+
+      const newSlides = result.slides.map((s: any, idx: number) => ({
+        ...s,
+        id: `${Date.now()}-append-${idx}`,
+        imageUrl: newImages[s.source_image_index !== undefined ? s.source_image_index : 0],
+        sourceImageIndex: startIdx + (s.source_image_index || 0)
+      }));
+
+      const updated = {
+        ...activeProject,
+        originalImages: [...activeProject.originalImages, ...newImages],
+        slides: [...activeProject.slides, ...newSlides]
+      };
+
+      setActiveProject(updated);
+      setProjects(prev => prev.map(p => p.id === activeProject.id ? updated : p));
+    } catch (err) {
+      setError("Erro ao adicionar quadros.");
     } finally {
       setIsLoading(false);
     }
@@ -574,14 +639,30 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => cameraInputRef.current?.click()}
+              className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2 rounded-full font-bold transition-all shadow-md flex items-center gap-2 text-sm"
+            >
+              <i className="fa-solid fa-camera"></i>
+              <span className="hidden sm:inline">Tirar Foto</span>
+            </button>
             <button
               onClick={() => fileInputRef.current?.click()}
               className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-full font-bold transition-all shadow-md flex items-center gap-2 text-sm"
             >
               <i className="fa-solid fa-cloud-arrow-up"></i>
-              <span>Enviar Quadros</span>
+              <span className="hidden sm:inline">Enviar Quadros</span>
+              <span className="sm:hidden text-[10px]">Galeria</span>
             </button>
+            <input
+              type="file"
+              ref={cameraInputRef}
+              className="hidden"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFilesSelect}
+            />
             <input
               type="file"
               ref={fileInputRef}
@@ -641,6 +722,53 @@ const App: React.FC = () => {
                 <button onClick={exportAllAsPDF} className="bg-slate-900 text-white px-5 py-3 md:py-2.5 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg w-full md:w-auto flex justify-center items-center">
                   <i className="fa-solid fa-file-pdf mr-2"></i> PDF
                 </button>
+                <button
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.capture = 'environment';
+                    input.onchange = async (e) => {
+                      const files = Array.from((e.target as HTMLInputElement).files || []);
+                      if (files.length === 0) return;
+                      const loaders = files.map(file => new Promise<string>((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result as string);
+                        reader.readAsDataURL(file);
+                      }));
+                      const newImages = await Promise.all(loaders);
+                      processAppendScan(newImages);
+                    };
+                    input.click();
+                  }}
+                  className="bg-slate-900 text-white px-5 py-3 md:py-2.5 rounded-xl font-bold hover:bg-slate-800 transition-all w-full md:w-auto flex justify-center items-center"
+                >
+                  <i className="fa-solid fa-camera mr-2"></i> Tirar Foto
+                </button>
+                <button
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.multiple = true;
+                    input.accept = 'image/*';
+                    input.onchange = async (e) => {
+                      const files = Array.from((e.target as HTMLInputElement).files || []);
+                      if (files.length === 0) return;
+                      files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+                      const loaders = files.map(file => new Promise<string>((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result as string);
+                        reader.readAsDataURL(file);
+                      }));
+                      const newImages = await Promise.all(loaders);
+                      processAppendScan(newImages);
+                    };
+                    input.click();
+                  }}
+                  className="bg-indigo-50 text-indigo-600 border border-indigo-200 px-5 py-3 md:py-2.5 rounded-xl font-bold hover:bg-indigo-600 hover:text-white transition-all w-full md:w-auto flex justify-center items-center"
+                >
+                  <i className="fa-solid fa-cloud-arrow-up mr-2"></i> Galeria
+                </button>
               </div>
             </div>
 
@@ -684,6 +812,8 @@ const App: React.FC = () => {
                   onFormat={applyCommand}
                   onStyleUpdate={updateTextStyle}
                   onDeactivate={() => setActiveTextPart(null)}
+                  onMove={moveSlide}
+                  totalSlides={activeProject.slides.length}
                   onPreview={(url) => setPreviewImage(url || slide.imageUrl || activeProject.originalImages[0])}
                   toolbarRef={toolbarRef}
                   isFormattingRef={isFormattingRef}
