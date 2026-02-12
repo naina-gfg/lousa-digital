@@ -356,6 +356,30 @@ const App: React.FC = () => {
     localStorage.setItem('lousa_projects_v4', JSON.stringify(projects));
   }, [projects]);
 
+  // Sincronizar activeProject com o histórico do navegador (para o botão voltar do celular funcionar)
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // Se voltarmos e o estado não indicar projeto aberto, fechamos a visualização atual
+      if (!event.state || !event.state.projectOpen) {
+        setActiveProject(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Quando um projeto é aberto, adicionamos uma entrada no histórico (pushState)
+  useEffect(() => {
+    if (activeProject) {
+      // Só adicionamos se o histórico atual não for de "projeto aberto"
+      // Isso evita pilhas infinitas ao editar o projeto (que altera o estado global)
+      if (!window.history.state || !window.history.state.projectOpen) {
+        window.history.pushState({ projectOpen: true }, "");
+      }
+    }
+  }, [activeProject?.id]); // Dispara apenas ao abrir um novo projeto ou trocar de ID
+
   const filteredProjects = useMemo(() => {
     if (!searchQuery) return projects;
     const q = searchQuery.toLowerCase();
@@ -742,7 +766,7 @@ const App: React.FC = () => {
           <div className="flex flex-col-reverse lg:grid lg:grid-cols-12 gap-8 w-full overflow-visible">
             <div className="lg:col-span-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b dark:border-slate-800 pb-8 no-print">
               <div className="space-y-2 w-full">
-                <button onClick={() => setActiveProject(null)} className="text-indigo-600 dark:text-indigo-400 font-bold text-sm mb-4 block hover:translate-x-[-4px] transition-transform">
+                <button onClick={() => window.history.back()} className="text-indigo-600 dark:text-indigo-400 font-bold text-sm mb-4 block hover:translate-x-[-4px] transition-transform">
                   <i className="fa-solid fa-chevron-left mr-2"></i> Voltar à Biblioteca
                 </button>
                 <p
