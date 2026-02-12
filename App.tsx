@@ -191,7 +191,7 @@ const EditableSlide = React.memo(React.forwardRef<HTMLDivElement, {
             </div>
           )}
 
-          <div className="flex justify-between items-center no-print mb-8">
+          <div className="flex justify-between items-center no-print mb-8" data-html2canvas-ignore>
             <span className="text-xs font-black opacity-30 uppercase tracking-widest">Digitalização {idx + 1}</span>
             <div className="flex gap-2">
               {onPreview && (
