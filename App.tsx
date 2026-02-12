@@ -40,10 +40,10 @@ const EditableSlide = React.memo(React.forwardRef<HTMLDivElement, {
 }, ref) => {
   const getAspectStyle = (ratio: string): React.CSSProperties => {
     switch (ratio) {
-      case '9:16': return { minHeight: 'calc(100% * 16 / 9)' };
-      case '1:1': return { minHeight: '100%' };
-      case '4:3': return { minHeight: 'calc(100% * 3 / 4)' };
-      default: return { minHeight: 'calc(100% * 9 / 16)' };
+      case '9:16': return { aspectRatio: '9 / 16' };
+      case '1:1': return { aspectRatio: '1 / 1' };
+      case '4:3': return { aspectRatio: '4 / 3' };
+      default: return { aspectRatio: '16 / 9' };
     }
   };
 
