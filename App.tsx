@@ -58,8 +58,8 @@ const EditableSlide = React.memo(React.forwardRef<HTMLDivElement, {
         ...(style.template === 'blueprint' ? { backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '20px 20px' } : {})
       }}
     >
-      <div className="p-8 md:p-16 relative flex flex-col justify-between h-full">
-        <div className="flex-1">
+      <div className="p-8 md:p-16 relative flex flex-col justify-start h-full overflow-hidden">
+        <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
           {activeTextPart && activeTextPart.slideId === slide.id && (
             <div
               ref={toolbarRef}
