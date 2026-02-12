@@ -444,6 +444,17 @@ const App: React.FC = () => {
     setProjects(prev => prev.map(p => p.id === activeProject.id ? updated : p));
   };
 
+  const updateProjectMeta = (id: string, updates: Partial<BoardProject>) => {
+    setProjects(prev => prev.map(p => {
+      if (p.id === id) {
+        const updated = { ...p, ...updates };
+        if (activeProject?.id === id) setActiveProject(updated);
+        return updated;
+      }
+      return p;
+    }));
+  };
+
   const processAppendScan = async (newImages: string[]) => {
     if (!activeProject) return;
     setIsLoading(true);
@@ -734,7 +745,22 @@ const App: React.FC = () => {
                 <button onClick={() => setActiveProject(null)} className="text-indigo-600 dark:text-indigo-400 font-bold text-sm mb-4 block hover:translate-x-[-4px] transition-transform">
                   <i className="fa-solid fa-chevron-left mr-2"></i> Voltar à Biblioteca
                 </button>
-                <h2 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight break-words">{activeProject.name}</h2>
+                <p
+                  contentEditable
+                  suppressContentEditableWarning
+                  onBlur={(e) => updateProjectMeta(activeProject.id, { course: e.currentTarget.innerText })}
+                  className="text-xs font-black text-indigo-500 uppercase tracking-widest outline-none cursor-text hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10 px-1 rounded transition-colors inline-block"
+                >
+                  {activeProject.course}
+                </p>
+                <h2
+                  contentEditable
+                  suppressContentEditableWarning
+                  onBlur={(e) => updateProjectMeta(activeProject.id, { name: e.currentTarget.innerText })}
+                  className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight break-words outline-none cursor-text hover:bg-slate-50 dark:hover:bg-white/5 px-1 rounded transition-colors"
+                >
+                  {activeProject.name}
+                </h2>
               </div>
               <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
                 <button onClick={() => setShowAppearance(!showAppearance)} className={`px-5 py-3 md:py-2.5 rounded-xl font-bold transition-all border dark:border-slate-700 w-full md:w-auto flex justify-center items-center ${showAppearance ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 dark:text-slate-300'}`}>
