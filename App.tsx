@@ -62,7 +62,7 @@ const EditableSlide = React.memo(React.forwardRef<HTMLDivElement, {
         ...(style.template === 'blueprint' ? { backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '20px 20px' } : {})
       }}
     >
-      <div className="p-8 md:p-16 relative flex flex-col justify-start h-full overflow-hidden">
+      <div className="p-2 md:p-8 relative flex flex-col justify-start h-full overflow-hidden">
         <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
           {activeTextPart && activeTextPart.slideId === slide.id && (
             <div
@@ -824,6 +824,10 @@ const App: React.FC = () => {
             </div>
           </div>
         )}
+
+        <footer className="mt-20 no-print text-center opacity-30 text-xs font-bold uppercase tracking-widest w-full py-8">
+          Lousa IQ — Digitalização Integral & Design Acadêmico
+        </footer>
       </main>
 
       {
@@ -875,9 +879,7 @@ const App: React.FC = () => {
         )
       }
 
-      <footer className="bg-white border-t border-slate-200 p-4 md:p-6 mt-20 no-print text-center opacity-30 text-xs font-bold uppercase tracking-widest w-full box-border">
-        Lousa IQ — Digitalização Integral & Design Acadêmico
-      </footer>
+
 
       {previewImage && (
         <div
