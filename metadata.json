@@ -1,0 +1,7 @@
+{
+  "name": "Lousa Intelligence - AI Board Scanner",
+  "description": "Transform your classroom whiteboard photos into elegant, structured slides using Gemini Pro. Enhance notes, generate diagrams, and edit images with cutting-edge AI.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

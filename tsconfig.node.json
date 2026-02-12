@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "lib": [
+            "ES2022"
+        ],
+        "strict": true,
+        "noEmit": true,
+        "skipLibCheck": true,
+        "types": [
+            "node"
+        ]
+    },
+    "include": [
+        "reproduce_gemini_error.ts",
+        "vite.config.ts"
+    ]
+}
