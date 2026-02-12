@@ -396,6 +396,15 @@ const App: React.FC = () => {
     }
   };
 
+  const deleteProject = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Avoid opening the project
+    if (window.confirm("Tem certeza que deseja excluir esta aula? Esta ação não pode ser desfeita.")) {
+      const updated = projects.filter(p => p.id !== id);
+      setProjects(updated);
+      localStorage.setItem('lousa_projects_v4', JSON.stringify(updated));
+    }
+  };
+
   const updateStyle = (style: Partial<SlideStyle>) => {
     if (!activeProject) return;
     const updated = { ...activeProject, style: { ...activeProject.style, ...style } };
@@ -541,7 +550,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col bg-slate-50 overflow-x-hidden max-w-[100vw]`}>
+    <div className={`h-screen flex flex-col bg-slate-50 overflow-x-hidden max-w-[100vw]`}>
 
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50 no-print">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3 px-4 py-3">
@@ -585,7 +594,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 md:px-6 py-4 md:py-6 overflow-hidden">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 md:px-6 py-4 md:py-6 overflow-y-auto">
         {(isLoading || pdfGenerating) && (
           <div className="fixed inset-0 bg-white/80 backdrop-blur-md z-[100] flex items-center justify-center flex-col no-print">
             <div className="w-20 h-20 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-6"></div>
@@ -596,8 +605,15 @@ const App: React.FC = () => {
         {!activeProject ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 no-print">
             {filteredProjects.map(p => (
-              <div key={p.id} onClick={() => setActiveProject(p)} className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all border overflow-hidden cursor-pointer group">
+              <div key={p.id} onClick={() => setActiveProject(p)} className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all border overflow-hidden cursor-pointer group relative">
                 <img src={p.originalImages[0]} className="h-40 w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <button
+                  onClick={(e) => deleteProject(p.id, e)}
+                  className="absolute top-3 right-3 bg-white/90 backdrop-blur shadow-md w-8 h-8 rounded-full flex items-center justify-center text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 hover:text-white"
+                  title="Excluir Aula"
+                >
+                  <i className="fa-solid fa-trash-can text-xs"></i>
+                </button>
                 <div className="p-5">
                   <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">{p.course}</p>
                   <h3 className="font-bold text-slate-800 mb-3">{p.name}</h3>
@@ -610,7 +626,7 @@ const App: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col-reverse lg:grid lg:grid-cols-12 gap-8 w-full overflow-hidden">
+          <div className="flex flex-col-reverse lg:grid lg:grid-cols-12 gap-8 w-full overflow-visible">
             <div className="lg:col-span-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b pb-8 no-print">
               <div className="space-y-2 w-full">
                 <button onClick={() => setActiveProject(null)} className="text-indigo-600 font-bold text-sm mb-4 block hover:translate-x-[-4px] transition-transform">

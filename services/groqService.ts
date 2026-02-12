@@ -21,23 +21,26 @@ export const extractSlidesWithLlama = async (base64Images: string[]): Promise<an
                     text: `Você é um motor de OCR de altíssima precisão. Sua tarefa é digitalizar esta sequência de imagens de quadros de aula.
           
           REGRAS:
-          1. Transcreva TUDO o que está escrito.
-          2. Mantenha a ordem dos slides.
-          3. Para cada slide, gere um JSON com título, conteúdo (array de strings), resumo e palavras-chave.
-          4. O formato de resposta DEVE ser EXATAMENTE este JSON:
+          1. Transcreva TUDO o que está escrito de forma LITERAL, EXAUSTIVA E INTEGRAL.
+          2. Não resuma, não parafraseie e não pule nenhuma linha, parágrafo ou detalhe técnico.
+          3. Mantenha a ordem cronológica/sequencial exata das imagens enviadas.
+          4. IMPORTANTE: Gere EXATAMENTE UM SLIDE PARA CADA IMAGEM enviada. Se eu enviei X imagens, seu array 'slides' deve ter comprimento X.
+          5. Para cada slide, extraia TODO o texto visível no campo 'content' (array de strings, onde cada item é um parágrafo ou tópico completo do quadro).
+          6. Gere um título condizente, um resumo breve para indexação e palavras-chave.
+          7. O formato de resposta DEVE ser EXATAMENTE este JSON:
           {
             "slides": [
               {
                 "title": "Título do Slide",
-                "content": ["Parágrafo 1", "Parágrafo 2"],
-                "summary": "Resumo do slide",
+                "content": ["Texto integral do primeiro parágrafo...", "Texto integral do segundo tópico...", "Continuação literal..."],
+                "summary": "Resumo executivo",
                 "keywords": ["tag1", "tag2"],
                 "source_image_index": 0
               }
             ],
             "theme": "modern"
           }
-          Retorne APENAS o JSON válido, sem markdown ou explicações adicionais.`
+          Retorne APENAS o JSON válido. O campo 'content' deve conter a transcrição completa e detalhada de tudo o que for legível na imagem.`
                 },
                 ...base64Images.map(base64 => ({
                     type: "image_url",
